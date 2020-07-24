@@ -1,7 +1,9 @@
 import { NativeModules } from 'react-native';
 
 type TwitterLoginSdkType = {
-  multiply(a: number, b: number): Promise<number>;
+  init(consumerKey: String, consumerSecret: String): Promise<any>;
+  logIn(): Promise<any>;
+  logOut(): void;
 };
 
 const { TwitterLoginSdk } = NativeModules;
