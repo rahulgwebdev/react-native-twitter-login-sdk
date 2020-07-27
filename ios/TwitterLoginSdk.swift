@@ -8,6 +8,10 @@ class TwitterLoginSdk: NSObject {
         authNotResolved = true
     }
     
+    @objc static func requiresMainQueueSetup() -> Bool {
+        return false
+    }
+    
     @objc(initialize:withB:withResolver:withRejecter:)
     func initialize(consumerKey:String, consumerSecret:String, resolve: @escaping RCTPromiseResolveBlock,reject:RCTPromiseRejectBlock) -> Void {
         DispatchQueue.main.async {
@@ -49,9 +53,12 @@ class TwitterLoginSdk: NSObject {
     
     @objc(logOut)
     func logOut() -> Void {
-       let store = TWTRTwitter.sharedInstance().sessionStore
-        if let userID = store.session()?.userID {
-          store.logOutUserID(userID)
+        DispatchQueue.main.async {
+        let store = TWTRTwitter.sharedInstance().sessionStore
+            if let userID = store.session()?.userID {
+                self.authNotResolved = true
+                store.logOutUserID(userID)
+            }
         }
     }
 }
