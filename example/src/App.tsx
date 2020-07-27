@@ -13,7 +13,7 @@ export default function App() {
 
   React.useEffect(() => {
     // TwitterLoginSdk.multiply(3, 7).then(setResult);
-    TwitterLoginSdk.init(
+    TwitterLoginSdk.initialize(
       Constants.TWITTER_COMSUMER_KEY,
       Constants.TWITTER_CONSUMER_SECRET
     ).then((res) => console.log(res));

@@ -8,6 +8,7 @@ import com.twitter.sdk.android.core.*
 import com.twitter.sdk.android.core.Callback
 import com.twitter.sdk.android.core.TwitterCore
 import com.twitter.sdk.android.core.identity.TwitterAuthClient
+import com.twitter.sdk.android.core.models.User
 
 
 class TwitterLoginSdkModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), ActivityEventListener {
@@ -23,7 +24,7 @@ class TwitterLoginSdkModule(reactContext: ReactApplicationContext) : ReactContex
     }
 
     @ReactMethod
-    fun init(consumerKey: String, consumerSecret: String, promise: Promise){
+    fun initialize(consumerKey: String, consumerSecret: String, promise: Promise){
       val config = TwitterConfig.Builder(reactApplicationContext)
         .logger(DefaultLogger(Log.DEBUG))
         .twitterAuthConfig(TwitterAuthConfig(consumerKey, consumerSecret))
@@ -44,17 +45,24 @@ class TwitterLoginSdkModule(reactContext: ReactApplicationContext) : ReactContex
         val map = Arguments.createMap()
         map.putString("authToken", twitterAuthToken?.token)
         map.putString("authTokenSecret", twitterAuthToken?.secret)
-        map.putString("name", session?.userName)
         map.putString("userID", session?.userId.toString())
         map.putString("userName", session?.userName)
-        twitterAuthClient?.requestEmail(session, object : Callback<String?>() {
-          override fun success(result: Result<String?>?) {
-            map.putString("email", result?.data)
+        TwitterApiClient(session).accountService.verifyCredentials(true, true, true).enqueue(object : Callback<User?>() {
+          override fun success(result: Result<User?>?) {
+            val user: User? = result?.data
+            val profileImage: String? = user?.profileImageUrl
+            val name: String? = user?.name
+            val email: String? = user?.email
+            map.putString("email",email)
+            map.putString("name",name)
+            map.putString("profileImage",profileImage)
             promise.resolve(map)
           }
-
           override fun failure(exception: TwitterException) {
             map.putString("email", "COULD_NOT_FETCH")
+            map.putString("email","COULD_NOT_FETCH")
+            map.putString("name","COULD_NOT_FETCH")
+            map.putString("profileImage","COULD_NOT_FETCH")
             promise.reject(
               "COULD_NOT_FETCH",
               map.toString(),
@@ -74,11 +82,11 @@ class TwitterLoginSdkModule(reactContext: ReactApplicationContext) : ReactContex
     val instance = TwitterCore.getInstance()
     val sessionManager = instance.sessionManager
     val sessions = sessionManager.sessionMap
-    println("TWITTER SEESIONS " + +sessions.size)
-    val sessids: Set<Long> = sessions.keys
-    for (sessid in sessids) {
-      println("TWITTER SESSION CLEARING $sessid")
-      instance.sessionManager.clearSession(sessid)
+    println("TWITTER SESSIONS " + +sessions.size)
+    val sessionIds: Set<Long> = sessions.keys
+    for (sessionId in sessionIds) {
+      println("TWITTER SESSION CLEARING $sessionId")
+      instance.sessionManager.clearSession(sessionId)
     }
     sessionManager
       .clearActiveSession()
