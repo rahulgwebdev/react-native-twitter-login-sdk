@@ -2,12 +2,6 @@
 @objc(TwitterLoginSdk)
 class TwitterLoginSdk: NSObject {
 
-    var authNotResolved : Bool
-    
-    override init() {
-        authNotResolved = true
-    }
-    
     @objc static func requiresMainQueueSetup() -> Bool {
         return false
     }
@@ -38,10 +32,7 @@ class TwitterLoginSdk: NSObject {
                         client.loadUser(withID: session!.userID, completion: { (user, error) in
                             result["name"] = user?.name
                             result["profileImageURL"] = user?.profileImageURL
-                            if(self.authNotResolved){
-                                resolve(result);
-                                self.authNotResolved = false;
-                            }
+                            resolve(result);
                         })
                     }
                 } else {
@@ -56,7 +47,6 @@ class TwitterLoginSdk: NSObject {
         DispatchQueue.main.async {
         let store = TWTRTwitter.sharedInstance().sessionStore
             if let userID = store.session()?.userID {
-                self.authNotResolved = true
                 store.logOutUserID(userID)
             }
         }
